@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trakking — BCO Importer + Terminal Operator</title>
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:17px;background:#F1F5F9;color:#1E293B;min-height:100vh}
+
+/* ── Top bar ── */
+.topbar{background:#0D1B2A;padding:11px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #29ABE2;position:sticky;top:0;z-index:100}
+.tlogo{display:flex;align-items:center;gap:10px}
+.tlogo-box{width:30px;height:30px;background:#29ABE2;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0D1B2A}
+.tlogo-name{font-size:17px;font-weight:700;color:#fff}
+.tlogo-sub{font-size:13px;color:#94A3B8;margin-top:1px}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:13px;color:#94A3B8}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#22C55E;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── Page nav ── */
+
+
+
+
+
+
+
+
+
+
+
+/* ── Page header banner ── */
+.page-header{padding:16px 22px 10px;border-bottom:1px solid #E2E8F0;background:#fff;margin-bottom:0}
+.ph-row{display:flex;align-items:center;gap:12px}
+.ph-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0}
+.ph-title{font-size:18px;font-weight:700;color:#0F172A}
+.ph-sub{font-size:12px;color:#64748B;margin-top:2px}
+
+/* ── Body ── */
+.body{padding:18px 22px}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* ── Stats ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat{background:#fff;border-radius:10px;padding:13px 15px;border-left:4px solid #29ABE2;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.stat.g{border-left-color:#16A34A}.stat.a{border-left-color:#D97706}.stat.r{border-left-color:#DC2626}.stat.p{border-left-color:#7C3AED}
+.slbl{font-size:12px;color:#64748B;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;font-weight:600}
+.sval{font-size:26px;font-weight:700;color:#0F172A}
+.ssub{font-size:12px;color:#64748B;margin-top:2px}
+
+/* ── Cards ── */
+.card{background:#fff;border-radius:10px;border:1px solid #E2E8F0;overflow:hidden;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-head{padding:10px 16px;border-bottom:1px solid #F1F5F9;display:flex;align-items:center;justify-content:space-between;background:#F8FAFC}
+.ch{font-size:14px;font-weight:700;color:#334155;letter-spacing:.3px;text-transform:uppercase}
+.badge{font-size:12px;padding:2px 8px;border-radius:8px;font-weight:700}
+.bc{background:#DBEAFE;color:#1D4ED8}.bg{background:#DCFCE7;color:#15803D}
+.ba{background:#FEF9C3;color:#92400E}.br{background:#FEE2E2;color:#B91C1C}
+.bw{background:#F1F5F9;color:#475569}.bp{background:#EDE9FE;color:#6D28D9}
+
+/* ── Rows ── */
+.row{padding:10px 16px;border-bottom:1px solid #F1F5F9;display:flex;align-items:center;gap:12px}
+.row:last-child{border-bottom:none}
+.row-info{flex:1;min-width:0}
+.row-id{font-size:15px;font-weight:700;color:#0F172A}
+.row-detail{font-size:13px;color:#64748B;margin-top:2px}
+.row-time{font-size:14px;font-weight:700;color:#0369A1;min-width:46px;flex-shrink:0}
+
+/* ── Terminal badges ── */
+.at-dp{font-size:12px;padding:2px 8px;border-radius:5px;font-weight:700;background:#DBEAFE;color:#1D4ED8;flex-shrink:0}
+.at-gct{font-size:12px;padding:2px 8px;border-radius:5px;font-weight:700;background:#DCFCE7;color:#15803D;flex-shrink:0}
+
+/* ── Priority pills ── */
+.pill{font-size:12px;padding:2px 8px;border-radius:8px;font-weight:700;flex-shrink:0}
+.pill-double{font-size:12px;background:#DCFCE7;color:#15803D}
+.pill-normal{font-size:12px;background:#F1F5F9;color:#64748B}
+.pill-export{font-size:12px;background:#EDE9FE;color:#6D28D9}
+.pill-open{font-size:12px;background:#DCFCE7;color:#15803D}
+.pill-taken{font-size:12px;background:#F1F5F9;color:#94A3B8}
+.pill-avail{background:#DCFCE7;color:#15803D;font-size:12px;padding:2px 8px;border-radius:8px;font-weight:700}
+.pill-wait{background:#FEF9C3;color:#92400E;font-size:12px;padding:2px 8px;border-radius:8px;font-weight:700}
+
+/* ── Buttons ── */
+.btn-claim{padding:7px 16px;background:#16A34A;border:none;border-radius:6px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s;flex-shrink:0}
+.btn-claim:hover{opacity:.85}
+.btn-claimed{padding:6px 14px;background:#F1F5F9;border:1px solid #CBD5E1;border-radius:6px;color:#94A3B8;font-size:11px;cursor:default;font-family:inherit;flex-shrink:0}
+.btn-primary{padding:10px 20px;background:#0369A1;border:none;border-radius:7px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-primary:hover{opacity:.88}
+.btn-outline{padding:8px 16px;background:transparent;border:1.5px solid #CBD5E1;border-radius:7px;color:#475569;font-size:13px;cursor:pointer;font-family:inherit}
+.btn-exp{padding:7px 16px;background:#7C3AED;border:none;border-radius:6px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0}
+.btn-exp:hover{opacity:.85}
+
+/* ── Banners ── */
+.banner{margin:12px;border-radius:8px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px}
+.banner.green{background:#F0FDF4;border:1.5px solid #86EFAC}
+.banner.blue{background:#EFF6FF;border:1.5px solid #93C5FD}
+.banner.purple{background:#F5F3FF;border:1.5px solid #C4B5FD}
+.banner.amber{background:#FFFBEB;border:1.5px solid #FDE68A}
+.bn-icon{width:30px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;margin-top:1px}
+.bn-title{font-size:15px;font-weight:700;margin-bottom:2px}
+.bn-text{font-size:13px;line-height:1.55}
+.banner.green .bn-title{color:#14532D}.banner.green .bn-text{color:#166534}
+.banner.blue  .bn-title{color:#1E3A8A}.banner.blue  .bn-text{color:#1E40AF}
+.banner.purple .bn-title{color:#4C1D95}.banner.purple .bn-text{color:#5B21B6}
+.banner.amber  .bn-title{color:#78350F}.banner.amber  .bn-text{color:#92400E}
+
+/* ── Forms ── */
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:13px;color:#475569;font-weight:700}
+.fg input,.fg select,.fg textarea{background:#fff;border:1.5px solid #CBD5E1;border-radius:7px;padding:10px 12px;font-size:15px;color:#1E293B;font-family:inherit;transition:border-color .15s;width:100%}
+.fg input:focus,.fg select:focus{outline:none;border-color:#29ABE2}
+.fg .hint{font-size:12px;color:#94A3B8}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-pad{padding:14px}
+
+/* ── Upload ── */
+.upload-zone{border:2px dashed #CBD5E1;border-radius:10px;padding:26px;text-align:center;cursor:pointer;transition:all .15s;background:#F8FAFC}
+.upload-zone:hover{border-color:#29ABE2;background:#EFF6FF}
+.upload-zone.drag{border-color:#29ABE2;background:#EFF6FF}
+.uz-icon{font-size:30px;margin-bottom:8px}
+.uz-title{font-size:15px;font-weight:700;color:#334155;margin-bottom:4px}
+.uz-sub{font-size:13px;color:#64748B}
+.uz-btn{margin-top:10px;padding:8px 20px;background:#fff;border:1.5px solid #CBD5E1;border-radius:6px;color:#475569;font-size:13px;cursor:pointer;font-family:inherit;font-weight:600}
+.preview-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+.preview-table th{text-align:left;padding:8px 10px;font-size:12px;color:#64748B;text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid #E2E8F0;font-weight:700;background:#F8FAFC}
+.preview-table td{padding:8px 10px;border-bottom:1px solid #F1F5F9;color:#1E293B}
+.preview-table tr.ok td:first-child::before{content:"✓ ";color:#16A34A;font-weight:700}
+.preview-table tr.err td{color:#DC2626}
+.preview-table tr.err td:first-child::before{content:"✗ ";color:#DC2626;font-weight:700}
+.upload-progress{background:#E2E8F0;border-radius:3px;height:5px;margin:8px 0;overflow:hidden}
+.upload-progress-fill{height:5px;background:#29ABE2;border-radius:3px;transition:width .4s ease}
+
+/* ── GPS panel ── */
+.gps-card{margin-bottom:14px;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.gps-head{padding:11px 16px;display:flex;align-items:center;justify-content:space-between}
+.gps-toggle{display:flex;align-items:center;gap:10px}
+.toggle-track{width:44px;height:24px;border-radius:12px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle-thumb{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+
+/* ── Geofence bars ── */
+.geo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px}
+.geo-card{border-radius:8px;padding:11px;border:1.5px solid #E2E8F0}
+.geo-name{font-size:12px;font-weight:700;color:#0F172A;margin-bottom:6px}
+.geo-bar-bg{background:#E2E8F0;border-radius:3px;height:5px;margin-bottom:4px;overflow:hidden}
+.geo-bar-fill{height:5px;border-radius:3px;transition:width .6s ease}
+.geo-status{font-size:10px}
+
+/* ── Section label ── */
+.section-lbl{font-size:12px;color:#64748B;text-transform:uppercase;letter-spacing:.6px;padding:8px 14px 4px;border-top:1px solid #F1F5F9;font-weight:700;background:#F8FAFC}
+
+/* ── Util bar ── */
+.util-bar{padding:10px 14px;border-bottom:1px solid #F1F5F9}
+.util-inner{background:#E2E8F0;border-radius:3px;height:7px;overflow:hidden;margin-bottom:5px}
+.util-fill{height:7px;border-radius:3px;transition:width .6s}
+
+/* ── Search bar ── */
+.search-bar{padding:10px 14px;display:flex;gap:8px;border-bottom:1px solid #F1F5F9;flex-wrap:wrap;background:#F8FAFC}
+.search-bar select{background:#fff;border:1px solid #CBD5E1;border-radius:7px;padding:6px 10px;font-size:12px;color:#334155;font-family:inherit;flex:1}
+.search-bar button{padding:8px 18px;background:#0369A1;border:none;border-radius:7px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* ── Confirmed move steps ── */
+.move-steps{padding:10px 14px;font-size:13px;line-height:1.9;color:#64748B}
+.move-steps .step-label{color:#94A3B8;margin-right:4px}
+.move-steps .step-val{color:#0F172A;font-weight:600}
+.move-steps .step-saving{color:#15803D;font-weight:700}
+
+/* ── Empty / toast ── */
+.empty-state{padding:24px;text-align:center;font-size:15px;color:#94A3B8}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#15803D;color:#fff;padding:12px 24px;border-radius:9px;font-size:14px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.toast.show{opacity:1}
+
+
+/* ── Dynamic pricing ── */
+.price-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:700;flex-shrink:0}
+.price-green{background:#DCFCE7;color:#15803D}
+.price-amber{background:#FEF9C3;color:#92400E}
+.price-blue{background:#DBEAFE;color:#1D4ED8}
+.price-range-bar{height:8px;border-radius:4px;background:#E2E8F0;position:relative;margin:6px 0}
+.price-range-fill{height:8px;border-radius:4px;position:absolute;left:0}
+.price-range-dot{width:14px;height:14px;border-radius:50%;position:absolute;top:-3px;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.pricing-card{background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:9px;padding:13px 15px;margin-bottom:10px}
+.pricing-card.active{background:#F0FDF4;border-color:#86EFAC}
+.price-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.price-label{font-size:12px;color:#64748B;font-weight:600}
+.price-val{font-size:15px;font-weight:700}
+.price-hint{font-size:11px;color:#94A3B8;margin-top:2px}
+.dynamic-tag{font-size:10px;padding:2px 7px;border-radius:6px;background:#FEF9C3;color:#92400E;font-weight:700;margin-left:6px}
+
+/* ── Pricing accordion ── */
+.ctr-row{border-bottom:1px solid #F1F5F9;transition:background .12s;cursor:pointer}
+.ctr-row:hover{background:#F8FAFC}
+.ctr-row:last-child{border-bottom:none}
+.ctr-summary{padding:11px 16px;display:flex;align-items:center;gap:12px}
+.ctr-chevron{width:20px;height:20px;border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s,background .15s;font-size:11px;color:#64748B}
+.ctr-row.open .ctr-chevron{transform:rotate(180deg);background:#DBEAFE;color:#1D4ED8}
+.price-expand{display:none;padding:0 16px 14px;border-top:1px solid #F1F5F9}
+.ctr-row.open .price-expand{display:block}
+.price-ticker{display:flex;align-items:baseline;gap:6px;margin-bottom:12px}
+.price-current-big{font-size:32px;font-weight:700;color:#0369A1;line-height:1}
+.price-currency{font-size:16px;color:#64748B;font-weight:500}
+.price-mode-tag{font-size:11px;padding:3px 9px;border-radius:6px;font-weight:700;margin-left:4px}
+.price-three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.price-box{border-radius:8px;padding:10px 12px;text-align:center}
+.price-box-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.price-box-val{font-size:20px;font-weight:700}
+.price-track-wrap{position:relative;margin:4px 0 6px}
+.price-track{height:8px;border-radius:4px;background:linear-gradient(to right,#FCA5A5,#FDE68A,#86EFAC);width:100%}
+.price-dot{width:18px;height:18px;border-radius:50%;background:#0369A1;border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.25);position:absolute;top:-5px;transition:left .4s ease}
+.price-track-labels{display:flex;justify-content:space-between;font-size:10px;color:#94A3B8;margin-top:4px}
+.price-note{font-size:11px;color:#64748B;background:#F8FAFC;border-radius:6px;padding:8px 10px;margin-top:6px;line-height:1.5}
+
+/* ── Hide native arrows on suggested price only ── */
+#imp-price-suggested::-webkit-outer-spin-button,
+#imp-price-suggested::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+#imp-price-suggested{-moz-appearance:textfield}
+
+/* ── Price stepper ── */
+.stepper-wrap{display:flex;align-items:center;border:1.5px solid #FDE68A;border-radius:7px;overflow:hidden;background:#fff}
+.stepper-btn{width:36px;height:40px;background:#FFFBEB;border:none;cursor:pointer;font-size:18px;font-weight:700;color:#92400E;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .12s;font-family:inherit;user-select:none}
+.stepper-btn:hover{background:#FDE68A}
+.stepper-btn:active{background:#FCA5A5}
+.stepper-input{flex:1;border:none;outline:none;text-align:center;font-size:16px;font-weight:700;color:#92400E;background:#fff;padding:0;height:40px;font-family:inherit;min-width:0}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="tlogo">
+    <div class="tlogo-box">T</div>
+    <div>
+      <div class="tlogo-name">Trakking <span style="color:#29ABE2;font-size:12px;font-weight:400">· Double-Ended Moves</span></div>
+      <div class="tlogo-sub">Inner Harbour · DP World Centerm Centerm &amp; GCT Vanterm</div>
+    </div>
+  </div>
+  <div class="live-badge"><div class="live-dot"></div>Live · Vancouver Inner Harbour</div>
+</div>
+<div id="page-content"></div>
+<div id="global-toast" class="toast"></div>
+<script>
+
+// ── Data ──────────────────────────────────────────────────────────────────
+const TERMS = {
+  DP:  { name:'DP World Centerm', short:'DP World Centerm' },
+  GCT: { name:'GCT Vanterm',      short:'GCT Vanterm' }
+};
+const LINES     = ['Yang Ming','Evergreen','ZIM','Maersk'];
+const COMPANIES = ['LTL Express','KTL','Fraser Valley Transport','Metro Container Lines','Harbour Link Trucking','Prudential Trucking'];
+const WAREHOUSES= ['Canadian Tire – 11800 Voyageur Way','Hud Distribution – 7450 Hopcott Rd','Surrey Distribution – 18956 96 Ave','Burnaby DC – 4480 Still Creek Dr'];
+const PFXS      = ['YMLU','EISU','ZIMU','MRKU','HLCU'];
+
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function pick(a){return a[rnd(0,a.length-1)]}
+function cid(){return pick(PFXS)+' '+rnd(1000000,9999999)}
+function bl(){return 'BLYM'+rnd(100000,999999)}
+
+let currentPage = 'importer';
+let matchRate=62, co2Saved=54056, kmSaved=300320, confirmedMatches=0;
+
+// GPS state
+let gpsOn=false, nearTerminal=null, truckLat=49.2827, truckLng=-123.1207;
+
+// Export reservations (truckers with a loaded drop-off booked)
+let exportRes=[
+  {id:'RES-001',container:cid(),company:'LTL Express',          terminal:'DP', line:'Yang Ming',time:'09:00',matched:null},
+  {id:'RES-002',container:cid(),company:'KTL',  terminal:'GCT',line:'Evergreen', time:'09:30',matched:null},
+  {id:'RES-003',container:cid(),company:'Harbour Link Trucking',    terminal:'DP', line:'ZIM',       time:'10:00',matched:null},
+  {id:'RES-004',container:cid(),company:'Metro Container Lines',terminal:'GCT',line:'Maersk',    time:'10:30',matched:null},
+  {id:'RES-005',container:cid(),company:'Fraser Valley Transport',terminal:'DP',line:'Yang Ming',time:'11:00',matched:null},
+  {id:'RES-006',container:cid(),company:'Prudential Trucking',        terminal:'GCT',line:'Evergreen', time:'11:30',matched:null},
+];
+
+// Import containers pre-populated by BCO importers
+let importCtrs=[
+  {id:'IMP-001',container:cid(),bl:bl(),bco:'Canadian Tire',       terminal:'DP', line:'Yang Ming',deliverTo:WAREHOUSES[0],window:'09:00–12:00',weight:'22T',priceMin:225,priceSuggested:320,priceLikely:275,priceMode:'dynamic',currentPrice:275,status:'available',claimedBy:null},
+  {id:'IMP-002',container:cid(),bl:bl(),bco:'TPCT Warehouse',      terminal:'GCT',line:'Evergreen', deliverTo:WAREHOUSES[1],window:'09:30–13:00',weight:'18T',priceMin:225,priceSuggested:300,priceLikely:255,priceMode:'dynamic',currentPrice:255,status:'available',claimedBy:null},
+  {id:'IMP-003',container:cid(),bl:bl(),bco:'Canadian Tire',       terminal:'DP', line:'ZIM',       deliverTo:WAREHOUSES[0],window:'10:00–14:00',weight:'24T',priceMin:225,priceSuggested:350,priceLikely:325,priceMode:'fixed',currentPrice:325,status:'confirmed',claimedBy:'Harbour Link Trucking'},
+  {id:'IMP-004',container:cid(),bl:bl(),bco:'K&N Warehouse',       terminal:'GCT',line:'Maersk',    deliverTo:WAREHOUSES[2],window:'10:30–15:00',weight:'20T',priceMin:225,priceSuggested:null,priceLikely:265,priceMode:'fixed',currentPrice:265,status:'available',claimedBy:null},
+  {id:'IMP-005',container:cid(),bl:bl(),bco:'HUD Distribution',    terminal:'DP', line:'Yang Ming', deliverTo:WAREHOUSES[3],window:'11:00–14:00',weight:'19T',priceMin:225,priceSuggested:380,priceLikely:340,priceMode:'fixed',currentPrice:340,status:'confirmed',claimedBy:'Prudential Trucking'},
+  {id:'IMP-006',container:cid(),bl:bl(),bco:'TPCT Warehouse',      terminal:'GCT',line:'Evergreen', deliverTo:WAREHOUSES[1],window:'11:30–16:00',weight:'21T',priceMin:225,priceSuggested:290,priceLikely:250,priceMode:'dynamic',currentPrice:250,status:'available',claimedBy:null},
+];
+
+// BCO exporter empty container requests
+let exportReqs=[
+  {id:'EXP-001',booking:'BKG-EXP-4421',bco:'Pacific Exports Inc.',  terminal:'DP', line:'Yang Ming',size:'40HC',window:'09:00–12:00',loadAddr:'Annacis Island – 1500 Derwent Way, Delta',status:'open',trucker:null},
+  {id:'EXP-002',booking:'BKG-EXP-4438',bco:'Maple Ridge Exports',   terminal:'GCT',line:'Evergreen', size:'40GP',window:'10:00–14:00',loadAddr:'Richmond – 13888 Wireless Way',status:'open',trucker:null},
+  {id:'EXP-003',booking:'BKG-EXP-4451',bco:'BC Lumber Co.',         terminal:'DP', line:'Maersk',    size:'20GP',window:'11:00–15:00',loadAddr:'Surrey – 19292 96th Ave',status:'open',trucker:null},
+];
+
+let confirmedMoves=[
+  {type:'import',trucker:'Harbour Link Trucking',expCtr:'ZIMU 4471829',expTerm:'DP',impCtr:'YMLU 3847291',impTerm:'DP',bco:'Canadian Tire',warehouse:'Canadian Tire – 11800 Voyageur Way',saving:85,time:'09:00',cross:false,scheduledDelivery:'Today 11:30 AM',priceAgreed:325},
+  {type:'import',trucker:'Prudential Trucking',expCtr:'MRKU 8812734',expTerm:'GCT',impCtr:'EISU 9284710',impTerm:'DP',bco:'Canadian Tire',warehouse:'Canadian Tire – 11800 Voyageur Way',saving:95,time:'11:00',cross:true,scheduledDelivery:'Today 2:00 PM',priceAgreed:405},
+  {type:'import',trucker:'KTL',expCtr:'YMLU 6634821',expTerm:'GCT',impCtr:'MRKU 7712341',impTerm:'GCT',bco:'TPCT Warehouse',warehouse:'Hud Distribution – 7450 Hopcott Rd',saving:90,time:'09:30',cross:false,scheduledDelivery:'Today 12:30 PM',priceAgreed:465},
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function termBadge(t){
+  return t==='DP' ? '<span class="at-dp">DP World Centerm</span>' : '<span class="at-gct">GCT Vanterm</span>';
+}
+
+function showToast(msg){
+  const t=document.getElementById('global-toast');
+  if(t){t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200)}
+}
+
+function statsHTML(page){
+  const avail=importCtrs.filter(c=>c.status==='available').length;
+  const openExp=exportReqs.filter(e=>e.status==='open').length;
+  if(page==='importer'){
+    return `<div class="stats">
+      <div class="stat"><div class="slbl">My containers registered</div><div class="sval">${importCtrs.length}</div><div class="ssub">At both terminals</div></div>
+      <div class="stat g"><div class="slbl">Available for pickup</div><div class="sval">${avail}</div><div class="ssub">Awaiting trucker match</div></div>
+      <div class="stat g"><div class="slbl">Deliveries confirmed</div><div class="sval">${confirmedMoves.filter(m=>m.type==='import').length}</div><div class="ssub">Trucker assigned</div></div>
+      <div class="stat g"><div class="slbl">CO₂ eliminated</div><div class="sval">${Math.round(co2Saved/1000)}T</div><div class="ssub">${Math.round(kmSaved/1000)}K km saved</div></div>
+    </div>`;
+  }
+  if(page==='dispatcher'){
+    return `<div class="stats">
+      <div class="stat"><div class="slbl">My reservations today</div><div class="sval">${exportRes.slice(0,3).length}</div><div class="ssub">Export drop-offs booked</div></div>
+      <div class="stat g"><div class="slbl">Matches confirmed</div><div class="sval">${confirmedMatches}</div><div class="ssub">Double-ended trips</div></div>
+      <div class="stat g"><div class="slbl">Savings today</div><div class="sval">${(confirmedMatches*235).toLocaleString()}</div><div class="ssub">vs. single-ended moves</div></div>
+      <div class="stat g"><div class="slbl">Double-ended rate</div><div class="sval">${matchRate}%</div><div class="ssub">Inner harbour today</div></div>
+    </div>`;
+  }
+  if(page==='port'){
+    return `<div class="stats">
+      <div class="stat g"><div class="slbl">Double-ended rate</div><div class="sval">${matchRate}%</div><div class="ssub">↑ +${matchRate-39}% vs. baseline</div></div>
+      <div class="stat"><div class="slbl">Import containers available</div><div class="sval">${avail}</div><div class="ssub">Pre-registered by BCOs</div></div>
+      <div class="stat p"><div class="slbl">Export pickups open</div><div class="sval">${openExp}</div><div class="ssub">BCO exporter requests</div></div>
+      <div class="stat g"><div class="slbl">Matches confirmed today</div><div class="sval">${confirmedMatches}</div><div class="ssub">${(confirmedMatches*235).toLocaleString()} saved</div></div>
+    </div>`;
+  }
+  if(page==='exporter'){
+    return `<div class="stats">
+      <div class="stat p"><div class="slbl">My bookings registered</div><div class="sval">${exportReqs.length}</div><div class="ssub">Empty containers needed</div></div>
+      <div class="stat g"><div class="slbl">Open requests</div><div class="sval">${openExp}</div><div class="ssub">Awaiting trucker</div></div>
+      <div class="stat g"><div class="slbl">Empty containers confirmed</div><div class="sval">${confirmedMoves.filter(m=>m.type==='export').length}</div><div class="ssub">Trucker assigned</div></div>
+      <div class="stat g"><div class="slbl">CO₂ eliminated</div><div class="sval">${Math.round(co2Saved/1000)}T</div><div class="ssub">Inner harbour total</div></div>
+    </div>`;
+  }
+  return '';
+}
+
+// ── Claim / assign ────────────────────────────────────────────────────────
+function claimImport(impId, resId){
+  const imp=importCtrs.find(c=>c.id===impId);
+  const res=exportRes.find(r=>r.id===resId&&!r.matched);
+  if(!imp||!res||imp.status!=='available') return;
+  imp.status='claimed'; imp.claimedBy=res.company; res.matched=imp;
+  matchRate=Math.min(matchRate+3,88);
+  co2Saved+=rnd(180,280); kmSaved+=rnd(700,1200); confirmedMatches+=1;
+  const cross=res.terminal!==imp.terminal;
+  confirmedMoves.push({type:'import',trucker:res.company,expCtr:res.container,expTerm:res.terminal,impCtr:imp.container,impTerm:imp.terminal,bco:imp.bco,warehouse:imp.deliverTo,saving:rnd(185,295),time:res.time,cross});
+  render();
+  showToast('Double-ended match confirmed'+(cross?' · cross-terminal':'')+' · Priority gate issued');
+}
+
+function claimExport(expId){
+  const exp=exportReqs.find(e=>e.id===expId&&e.status==='open');
+  if(!exp) return;
+  exp.status='assigned'; exp.trucker=pick(COMPANIES);
+  matchRate=Math.min(matchRate+2,88);
+  co2Saved+=rnd(120,200); kmSaved+=rnd(500,900); confirmedMatches+=1;
+  confirmedMoves.push({type:'export',trucker:exp.trucker,bco:exp.bco,terminal:exp.terminal,line:exp.line,size:exp.size,loadAddr:exp.loadAddr,saving:rnd(140,220),time:exp.window.split('–')[0]});
+  render();
+  showToast('Empty container pickup confirmed for '+exp.bco+' · Trucker assigned');
+}
+
+function acceptAutoMatch(){
+  const avail=importCtrs.filter(c=>c.status==='available'&&c.terminal===nearTerminal);
+  const openE=exportReqs.filter(e=>e.status==='open'&&e.terminal===nearTerminal);
+  const res=exportRes.find(r=>!r.matched);
+  if(avail.length>0&&res) claimImport(avail[0].id,res.id);
+  else if(openE.length>0) claimExport(openE[0].id);
+  else { showToast('Match accepted · Priority gate confirmed'); confirmedMatches+=1; matchRate=Math.min(matchRate+2,88); }
+  nearTerminal=null; render();
+}
+function dismissAlert(){ nearTerminal=null; render(); }
+
+// ── GPS ───────────────────────────────────────────────────────────────────
+function calcDist(la1,ln1,la2,ln2){
+  const R=6371,dL=(la2-la1)*Math.PI/180,dN=(ln2-ln1)*Math.PI/180;
+  const a=Math.sin(dL/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dN/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+const GF={DP:{lat:49.2879,lng:-123.0922,name:'DP World Centerm',r:1.2},GCT:{lat:49.2956,lng:-123.1040,name:'GCT Vanterm',r:1.2}};
+
+function toggleGPS(){
+  gpsOn=!gpsOn;
+  if(!gpsOn){nearTerminal=null;}
+  else{ setTimeout(()=>{ if(gpsOn&&!nearTerminal) simPos(49.2879,-123.0922,'DP'); },3000); }
+  render();
+}
+function simPos(lat,lng,term){
+  truckLat=lat; truckLng=lng; nearTerminal=term;
+  if(term) showToast('Geofence entered · Auto-match alert sent to your device');
+  render();
+}
+
+// ── GPS section HTML ──────────────────────────────────────────────────────
+function gpsSection(){
+  const dotClr=gpsOn?'#22C55E':'#CBD5E1';
+  const dotPulse=gpsOn?'animation:blink 1.2s infinite':'';
+  const borderClr=gpsOn?'#29ABE2':'#E2E8F0';
+  const headBg=gpsOn?'#EFF6FF':'#F8FAFC';
+  const avail=importCtrs.filter(c=>c.status==='available');
+  const openE=exportReqs.filter(e=>e.status==='open');
+  const nearest=nearTerminal?(avail.find(c=>c.terminal===nearTerminal)||openE.find(e=>e.terminal===nearTerminal)):null;
+
+  return `<div class="gps-card" style="border:2px solid ${borderClr};background:#fff">
+    <div class="gps-head" style="background:${headBg};border-bottom:1px solid ${borderClr}">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${dotClr};${dotPulse}"></span>
+        <span style="font-size:12px;font-weight:700;color:${gpsOn?'#0369A1':'#64748B'};text-transform:uppercase;letter-spacing:.4px">GPS &amp; Geofence Alerts</span>
+        ${gpsOn?`<span style="font-size:11px;color:#0369A1;margin-left:6px">Lat ${truckLat.toFixed(4)} · Lng ${truckLng.toFixed(4)}</span>`:''}
+      </div>
+      <div class="gps-toggle">
+        <span style="font-size:12px;color:#475569;font-weight:600">${gpsOn?'GPS on':'GPS off'}</span>
+        <div class="toggle-track" style="background:${gpsOn?'#0369A1':'#CBD5E1'}" onclick="toggleGPS()">
+          <div class="toggle-thumb" style="left:${gpsOn?'23px':'3px'}"></div>
+        </div>
+      </div>
+    </div>
+    ${gpsOn ? `
+    <div class="geo-grid">
+      ${Object.entries(GF).map(([k,g])=>{
+        const d=calcDist(truckLat,truckLng,g.lat,g.lng);
+        const inside=d<=g.r;
+        const pct=Math.max(0,Math.min(100,Math.round((1-(d/5))*100)));
+        return `<div class="geo-card" style="background:${inside?'#F0FDF4':'#F8FAFC'};border-color:${inside?'#86EFAC':'#E2E8F0'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+            <span class="geo-name">${g.name}</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:8px;font-weight:700;background:${inside?'#DCFCE7':'#F1F5F9'};color:${inside?'#15803D':'#64748B'}">${inside?'IN RANGE':d.toFixed(1)+' km'}</span>
+          </div>
+          <div class="geo-bar-bg"><div class="geo-bar-fill" style="width:${pct}%;background:${inside?'#16A34A':'#29ABE2'}"></div></div>
+          <div class="geo-status" style="color:${inside?'#15803D':'#64748B'}">${inside?'Alert triggered · Match sent to device':'Approaching — '+g.r+' km radius'}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${nearTerminal && nearest ? `
+    <div style="margin:0 12px 12px;background:#EFF6FF;border:1.5px solid #93C5FD;border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:#1E3A8A;margin-bottom:8px">📱 Auto-match suggestion — ${GF[nearTerminal].name}</div>
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:7px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:15px;font-weight:700;color:#0F172A;margin-bottom:3px">${nearest.container||nearest.booking}</div>
+        <div style="font-size:13px;color:#64748B">${nearest.bco||nearest.company||''} · ${GF[nearTerminal].name} · ${nearest.window||nearest.pickupWindow||''}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="acceptAutoMatch()" style="padding:7px 18px;background:#0369A1;border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Accept &amp; claim</button>
+        <button onclick="dismissAlert()" style="padding:7px 14px;background:transparent;border:1.5px solid #CBD5E1;border-radius:6px;color:#475569;font-size:12px;cursor:pointer;font-family:inherit">Dismiss</button>
+      </div>
+    </div>` : ''}
+    <div style="padding:0 12px 12px">
+      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:11px 13px">
+        <div style="font-size:13px;font-weight:700;color:#334155;margin-bottom:8px">Simulate truck position</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="simPos(49.2879,-123.0922,'DP')" style="padding:5px 12px;background:#DBEAFE;border:1px solid #93C5FD;border-radius:6px;color:#1D4ED8;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Near DP World Centerm</button>
+          <button onclick="simPos(49.2956,-123.1040,'GCT')" style="padding:5px 12px;background:#DCFCE7;border:1px solid #86EFAC;border-radius:6px;color:#15803D;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Near GCT Vanterm</button>
+          <button onclick="simPos(49.2500,-123.1200,null)" style="padding:5px 12px;background:#F1F5F9;border:1px solid #CBD5E1;border-radius:6px;color:#475569;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Out of range</button>
+        </div>
+        <div style="font-size:10px;color:#94A3B8;margin-top:7px">Production: position updates automatically from TLS-mandated GPS device every 30 seconds.</div>
+      </div>
+    </div>` : `
+    <div style="padding:16px">
+      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:16px;text-align:center">
+        <div style="font-size:13px;color:#64748B;margin-bottom:6px">Turn on GPS to receive automatic appointment alerts near DP World Centerm or GCT Vanterm</div>
+        <button onclick="toggleGPS()" style="padding:9px 22px;background:#0369A1;border:none;border-radius:7px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Enable GPS tracking</button>
+      </div>
+    </div>`}
+  </div>`;
+}
+
+// ── Terminal panel (shared between importer + exporter pages) ─────────────
+function termPanel(key, showImports, showExports){
+  const t=TERMS[key];
+  const res=exportRes.filter(r=>r.terminal===key);
+  const imp=importCtrs.filter(c=>c.terminal===key);
+  const exp=exportReqs.filter(e=>e.terminal===key);
+  const util=key==='DP'?72:58;
+  const clr=util>70?'#D97706':'#16A34A';
+  return `<div class="card">
+    <div class="card-head">
+      <span class="ch">${t.name}</span>
+      <span class="badge bc">${res.length} export · ${imp.filter(c=>c.status==='available').length} import avail · ${exp.filter(e=>e.status==='open').length} empty req</span>
+    </div>
+    <div class="banner green" style="margin:10px">
+      <div class="bn-icon" style="background:#16A34A">P</div>
+      <div><div class="bn-title">Priority gate lane active</div><div class="bn-text">Double-ended moves get a dedicated priority slot — no second appointment needed.</div></div>
+    </div>
+    <div class="util-bar">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:5px">
+        <span style="font-weight:700">Gate utilization</span><span style="color:${clr};font-weight:700">${util}%</span>
+      </div>
+      <div class="util-inner"><div class="util-fill" style="width:${util}%;background:${clr}"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#94A3B8;margin-top:3px">
+        <span>Export slots: <strong style="color:#334155">${res.length}</strong></span>
+        <span>Double-ended: <strong style="color:#15803D">${res.filter(r=>r.matched).length}</strong></span>
+      </div>
+    </div>
+    ${showImports ? `
+    <div class="section-lbl">Import containers available for pickup</div>
+    ${imp.length===0?'<div class="empty-state">None registered</div>':imp.map(c=>`<div class="row">
+      <div class="row-info">
+        <div class="row-id">${c.container}</div>
+        <div class="row-detail">B/L: ${c.bl} · ${c.bco} · ${c.line} · ${c.weight} · ${c.window}</div>
+      </div>
+      <span class="${c.status==='claimed'?'pill-taken':'pill-avail'}">${c.status==='claimed'?'Claimed':'Available'}</span>
+    </div>`).join('')}` : ''}
+    ${showExports ? `
+    <div class="section-lbl">BCO exporter empty container requests</div>
+    ${exp.length===0?'<div class="empty-state">None registered</div>':exp.map(e=>`<div class="row">
+      <div class="row-info">
+        <div class="row-id">${e.booking} · ${e.bco}</div>
+        <div class="row-detail">${e.line} · ${e.size} empty · ${e.window} · Load: ${e.loadAddr.split('–')[0].trim()}</div>
+      </div>
+      <span class="${e.status==='open'?'pill-open':'pill-taken'}">${e.status==='open'?'Open':'Assigned'}</span>
+    </div>`).join('')}` : ''}
+    <div class="section-lbl">Export reservations</div>
+    ${res.map(r=>`<div class="row">
+      <div class="row-time">${r.time}</div>
+      <div class="row-info">
+        <div class="row-id">${r.container} · ${r.company}</div>
+        <div class="row-detail">${r.line}${r.matched?' → pickup '+r.matched.container+' ('+TERMS[r.matched.terminal].short+')':''}</div>
+      </div>
+      <span class="pill ${r.matched?'pill-double':'pill-normal'}">${r.matched?'Priority':'Standard'}</span>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ── PAGE 1: BCO Importer + Terminal operator ──────────────────────────────
+function pageImporter(){
+  return `
+  <div style="background:#EFF6FF;border-bottom:1px solid #BFDBFE;padding:12px 22px;display:flex;align-items:center;gap:12px">
+    <div style="width:36px;height:36px;background:#2563EB;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0">I</div>
+    <div><div style="font-size:19px;font-weight:700;color:#1E3A8A">BCO Importer</div><div style="font-size:13px;color:#3B82F6;margin-top:1px">Register your import containers · View terminal operator status</div></div>
+  </div>
+  <div class="body">
+    ${statsHTML('importer')}
+    <div class="banner blue" style="margin:0 0 14px">
+      <div class="bn-icon" style="background:#2563EB">I</div>
+      <div><div class="bn-title">How this works for you as an importer</div><div class="bn-text">Register your containers below — one at a time or via spreadsheet. Truckers completing export drop-offs will find your container and deliver to your warehouse within your specified window. Your containers also receive priority clearance at both terminals.</div></div>
+    </div>
+    <div class="cols2">
+      <div>
+        <div class="card">
+          <div class="card-head" style="background:#0D1B2A;border-left:6px solid #29ABE2;padding:14px 18px"><span style="font-size:22px;font-weight:700;color:#FFFFFF;letter-spacing:-.3px">My Import Containers</span><span class="badge bc" style="font-size:13px;padding:4px 12px">${importCtrs.length} registered</span></div>
+          ${importCtrs.map((c,idx)=>`<div class="ctr-row" id="ctr-row-${idx}">
+            <div class="ctr-summary" onclick="togglePricing(${idx})">
+              <div class="row-info">
+                <div class="row-id">${c.container}
+                  ${c.currentPrice?`<span style="font-size:13px;font-weight:700;color:#0369A1;margin-left:8px">$${c.currentPrice}</span><span style="font-size:11px;color:#94A3B8;margin-left:3px">/ container</span>`:''}
+                </div>
+                <div class="row-detail">B/L: ${c.bl} · ${c.bco} · ${c.line}</div>
+                <div class="row-detail">Deliver to: ${c.deliverTo.split('–')[0].trim()} · ${c.window} · ${c.weight} · ${termBadge(c.terminal)}</div>
+                ${c.status==='confirmed'?`<div class="row-detail" style="color:#15803D;font-weight:700;margin-top:3px">✓ Confirmed · Trucker: ${c.claimedBy}</div>`:''}
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                <span style="font-size:12px;padding:3px 11px;border-radius:8px;font-weight:700;flex-shrink:0;background:${c.status==='confirmed'?'#DCFCE7':c.status==='claimed'?'#DBEAFE':'#FEF9C3'};color:${c.status==='confirmed'?'#15803D':c.status==='claimed'?'#1D4ED8':'#92400E'}">${c.status==='confirmed'?'✓ Confirmed':c.status==='claimed'?'Trucker assigned':'Awaiting match'}</span>
+                ${c.currentPrice?`<div class="ctr-chevron">▾</div>`:''}
+              </div>
+            </div>
+            ${c.currentPrice ? pricingMiniCard(c) : ''}
+          </div>`).join('')}
+        </div>
+        <div class="card">
+          <div class="card-head" style="background:#0D1B2A;border-left:6px solid #4A9B6F;padding:11px 16px"><span style="font-size:14px;font-weight:700;color:#FFFFFF;letter-spacing:.3px;text-transform:uppercase">Delivery confirmations</span></div>
+          ${confirmedMoves.filter(m=>m.type==='import').length===0
+            ?'<div class="empty-state">No deliveries confirmed yet</div>'
+            :confirmedMoves.filter(m=>m.type==='import').map(m=>`<div style="border-bottom:1px solid #F1F5F9">
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 16px">
+                <div style="width:36px;height:36px;border-radius:8px;background:#DCFCE7;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">&#128666;</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:15px;font-weight:700;color:#0F172A;display:flex;align-items:center;gap:7px;flex-wrap:wrap">${m.impCtr}
+                    <span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#DCFCE7;color:#15803D;font-weight:700">&#10003; Scheduled</span>
+                    ${m.cross?'<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#DBEAFE;color:#1D4ED8;font-weight:700">Cross-terminal</span>':''}
+                  </div>
+                  <div style="font-size:13px;color:#64748B;margin-top:3px">Trucker: <strong style="color:#334155">${m.trucker}</strong> &nbsp;&#183;&nbsp; To: ${m.warehouse.split('–')[0].trim()}</div>
+                  <div style="font-size:12px;color:#64748B;margin-top:2px">${TERMS[m.expTerm].short} &#8594; ${TERMS[m.impTerm].short} &nbsp;&#183;&nbsp; Priority clearance confirmed</div>
+                </div>
+                <div style="text-align:right;flex-shrink:0">
+                  <div style="font-size:20px;font-weight:700;color:#15803D">$${m.priceAgreed||m.saving}</div>
+                  <div style="font-size:10px;color:#94A3B8;margin-top:1px">agreed rate</div>
+                </div>
+              </div>
+              <div style="margin:0 14px 12px;background:#F0FDF4;border:1px solid #86EFAC;border-radius:7px;padding:9px 13px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:20px">&#128197;</span>
+                  <div>
+                    <div style="font-size:12px;font-weight:700;color:#14532D">Scheduled delivery</div>
+                    <div style="font-size:15px;font-weight:700;color:#15803D">${m.scheduledDelivery||'Today'}</div>
+                  </div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:11px;color:#64748B">Saving vs. single move</div>
+                  <div style="font-size:15px;font-weight:700;color:#0369A1">$${m.saving} saved</div>
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-head" style="background:#0D1B2A;border-left:6px solid #1D9E75;padding:14px 18px"><span style="font-size:22px;font-weight:700;color:#FFFFFF;letter-spacing:-.3px">Add Single Container</span><span class="badge bg" style="font-size:13px;padding:4px 12px">Manual entry</span></div>
+          <div class="form-pad">
+            <div class="form-grid-2">
+              <div class="fg"><label>Container number *</label><input id="imp-ctr" placeholder="MRKU 1234567"></div>
+              <div class="fg"><label>Bill of lading (B/L) *</label><input id="imp-bl" placeholder="BLYM987654"><div class="hint">Required for port customs clearance</div></div>
+            </div>
+            <div class="form-grid-2">
+              <div class="fg"><label>Terminal *</label><select id="imp-term"><option value="DP">DP World Centerm</option><option value="GCT">GCT Vanterm</option></select></div>
+              <div class="fg"><label>Shipping line</label><select id="imp-line"><option>Yang Ming</option><option>Evergreen</option><option>ZIM</option><option>Maersk</option></select></div>
+            </div>
+            <div class="form-grid-2">
+              <div class="fg"><label>Window from *</label><input type="time" id="imp-from" value="09:00"></div>
+              <div class="fg"><label>Window to *</label><input type="time" id="imp-to" value="14:00"></div>
+            </div>
+            <div class="fg" style="margin-bottom:10px"><label>Deliver to (warehouse address) *</label><input id="imp-addr" placeholder="11800 Voyageur Way, Richmond BC"></div>
+            <div class="form-grid-2">
+              <div class="fg"><label>Weight</label><input id="imp-wt" placeholder="22T"></div>
+              <div class="fg"><label>Container size</label><select id="imp-size"><option>40GP</option><option>40HC</option><option>20GP</option></select></div>
+            </div>
+            <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:9px;padding:13px 15px;margin-bottom:12px">
+              <div style="font-size:14px;font-weight:700;color:#92400E;margin-bottom:10px">💲 Delivery Fee Range (CAD per container) — BID PRICE</div>
+              <div class="form-grid-2" style="margin-bottom:8px">
+                <div class="fg">
+                  <label>Minimum price <span style="font-size:10px;color:#94A3B8;font-weight:400">(floor — will not go below)</span></label>
+                  <div class="stepper-wrap">
+                    <button class="stepper-btn" onclick="stepPrice('imp-price-min',-5)">&#8722;</button>
+                    <input id="imp-price-min" class="stepper-input" type="number" placeholder="225" min="225" step="5" value="225">
+                    <button class="stepper-btn" onclick="stepPrice('imp-price-min',5)">&#43;</button>
+                  </div>
+                </div>
+                <div class="fg">
+                  <label>Maximum price <span style="font-size:10px;color:#94A3B8;font-weight:400">(upper ceiling)</span></label>
+                  <div class="stepper-wrap">
+                    <button class="stepper-btn" onclick="stepPrice('imp-price-likely',-5)">&#8722;</button>
+                    <input id="imp-price-likely" class="stepper-input" type="number" placeholder="250" min="0" step="5" value="250">
+                    <button class="stepper-btn" onclick="stepPrice('imp-price-likely',5)">&#43;</button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-grid-2" style="margin-bottom:6px">
+                <div class="fg" id="suggested-price-wrap" style="display:none">
+                  <label>Suggested price <span style="font-size:10px;color:#94A3B8;font-weight:400">(your preferred rate)</span></label>
+                  <input id="imp-price-suggested" type="number" placeholder="e.g. 220" min="0" step="5" style="border-color:#FDE68A">
+                </div>
+                <div class="fg">
+                  <label>Pricing mode</label>
+                  <select id="imp-price-mode" style="border-color:#FDE68A" onchange="toggleSuggestedPrice(this.value)">
+                    <option value="fixed">Fixed — set price only</option>
+                    <option value="dynamic">Dynamic — adjust by availability</option>
+                  </select>
+                </div>
+              </div>
+              <div style="font-size:11px;color:#92400E;margin-top:4px">Truckers see the current dynamic price. Trakking adjusts within your range based on time of day, terminal congestion, and available matches.</div>
+            </div>
+            <div id="imp-err" style="margin-bottom:8px"></div>
+            <button class="btn-primary" style="width:100%" onclick="addSingleContainer()">Register container for pickup</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head" style="background:#0D1B2A;border-left:6px solid #E8A838;padding:11px 16px"><span style="font-size:14px;font-weight:700;color:#FFFFFF;letter-spacing:.3px;text-transform:uppercase">Bulk upload — Excel / CSV</span><span class="badge bg" style="margin-left:10px">Multiple containers</span></div>
+          <div class="form-pad">
+            <div id="upload-zone" class="upload-zone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+              <div class="uz-icon">📋</div>
+              <div class="uz-title">Drag &amp; drop your Excel or CSV file</div>
+              <div class="uz-sub">Supported: .xlsx, .xls, .csv · Max 500 rows</div>
+              <button class="uz-btn" onclick="document.getElementById('file-input').click()">Browse files</button>
+              <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(this)">
+            </div>
+            <div style="margin-top:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:7px;padding:10px">
+              <div style="font-size:13px;color:#475569;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Required columns:</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:13px;color:#64748B">
+                ${['Container Number *','Bill of Lading *','Terminal (DP/GCT) *','Shipping Line *','Deliver To Address *','Window From *','Window To *','Weight'].map(c=>`<div>${c.includes('*')?'<span style="color:#DC2626">*</span> ':''} ${c.replace(' *','')}</div>`).join('')}
+              </div>
+              <button class="btn-outline" style="margin-top:10px;font-size:13px;padding:7px 14px" onclick="downloadTemplate()">Download template (.csv)</button>
+            </div>
+            <div id="upload-preview"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>`;
+}
+
+// ── PAGE 2: Truck Dispatcher ──────────────────────────────────────────────
+function pageDispatcher(){
+  const avail=importCtrs.filter(c=>c.status==='available');
+  const openExp=exportReqs.filter(e=>e.status==='open');
+  const myRes=exportRes.slice(0,3);
+  const unmatched=myRes.filter(r=>!r.matched);
+
+  const importRows=avail.length===0
+    ?'<div class="empty-state">All import containers claimed — check back shortly</div>'
+    :avail.map(c=>{
+      const compat=unmatched[0];
+      const cross=compat&&compat.terminal!==c.terminal;
+      return `<div class="row">
+        <div class="row-info">
+          <div class="row-id">${c.container} ${cross?'<span style="font-size:10px;padding:1px 7px;border-radius:6px;background:#DBEAFE;color:#1D4ED8;font-weight:700">Cross-terminal</span>':''}</div>
+          <div class="row-detail">${c.bco} · B/L: ${c.bl} · Deliver to: ${c.deliverTo.split('–')[0].trim()}</div>
+          <div class="row-detail" style="margin-top:2px">${termBadge(c.terminal)} · ${c.line} · ${c.window} · ${c.weight}</div>
+        </div>
+        ${compat?`<button class="btn-claim" onclick="claimImport('${c.id}','${compat.id}')">Claim</button>`:'<button class="btn-claimed">Claimed</button>'}
+      </div>`;
+    }).join('');
+
+  const exportRows=openExp.length===0
+    ?'<div class="empty-state">No open export pickup requests</div>'
+    :openExp.map(e=>`<div class="row">
+      <div class="row-info">
+        <div class="row-id">${e.booking} · ${e.bco}</div>
+        <div class="row-detail">${TERMS[e.terminal].short} · ${e.line} · ${e.size} empty · ${e.window}</div>
+        <div class="row-detail">Deliver empty to: ${e.loadAddr.split('–')[0].trim()}</div>
+      </div>
+      ${termBadge(e.terminal)}
+      <button class="btn-exp" onclick="claimExport('${e.id}')">Claim</button>
+    </div>`).join('');
+
+  const myMovesHTML=confirmedMoves.length===0
+    ?'<div class="empty-state">No confirmed matches yet — claim one above</div>'
+    :confirmedMoves.map(m=>`<div class="row">
+      <div class="row-info">
+        <div class="row-id">${m.trucker} <span style="font-size:10px;padding:1px 7px;border-radius:6px;font-weight:700;background:${m.type==='export'?'#EDE9FE':'#DCFCE7'};color:${m.type==='export'?'#6D28D9':'#15803D'}">${m.type==='export'?'Export pickup':'Import delivery'} · Priority</span></div>
+        <div class="move-steps">
+          ${m.type==='export'
+            ?`<span class="step-label">Step 1 ·</span><span class="step-val"> Drop export at ${TERMS[m.terminal]?.short||m.expTerm}</span><br>
+               <span class="step-label">Step 2 ·</span><span class="step-val"> Pick up ${m.size} empty from ${TERMS[m.terminal]?.short||m.expTerm}</span><br>
+               <span class="step-label">Step 3 ·</span><span class="step-val"> Deliver to ${m.loadAddr?.split('–')[0].trim()||m.warehouse}</span>`
+            :`<span class="step-label">Step 1 ·</span><span class="step-val"> Drop ${m.expCtr} at ${TERMS[m.expTerm].short}</span><br>
+               <span class="step-label">Step 2 ·</span><span class="step-val"> Pick up ${m.impCtr} at ${TERMS[m.impTerm].short}</span><br>
+               <span class="step-label">Step 3 ·</span><span class="step-val"> Deliver to ${m.warehouse.split('–')[0].trim()}</span>`}
+          <br><span class="step-saving">Saving: ${m.saving} · Priority gate confirmed at both terminals</span>
+        </div>
+      </div>
+    </div>`).join('');
+
+  return `
+  <div style="background:#EFF6FF;border-bottom:1px solid #BFDBFE;padding:12px 22px;display:flex;align-items:center;gap:12px">
+    <div style="width:36px;height:36px;background:#0369A1;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0">T</div>
+    <div><div style="font-size:16px;font-weight:700;color:#0F172A">Trucking Dispatcher</div><div style="font-size:11px;color:#0369A1;margin-top:1px">GPS alerts · Import &amp; export match search · Priority gate</div></div>
+  </div>
+  <div class="body">
+    ${statsHTML('dispatcher')}
+    ${gpsSection()}
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-head"><span class="ch">My export reservations today</span><span class="badge bc">DP World Centerm &amp; GCT Vanterm</span></div>
+      <div class="banner green" style="margin:10px">
+        <div class="bn-icon" style="background:#16A34A">1</div>
+        <div><div class="bn-title">You have an export drop-off booked</div><div class="bn-text">After dropping your loaded container, search below for either an import delivery (Option A) or an export empty pickup (Option B). Both give you a priority gate slot.</div></div>
+      </div>
+      ${myRes.map(r=>`<div class="row">
+        <div class="row-time">${r.time}</div>
+        <div class="row-info">
+          <div class="row-id">${r.container}</div>
+          <div class="row-detail">${TERMS[r.terminal].short} · ${r.line} · Drop full export</div>
+        </div>
+        <span class="pill ${r.matched?'pill-double':'pill-normal'}">${r.matched?'Matched':'Awaiting match'}</span>
+        ${termBadge(r.terminal)}
+      </div>`).join('')}
+    </div>
+    <div class="cols2">
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-head"><span class="ch">Option A — Import pickups available</span><span class="badge bg">${avail.length} available</span></div>
+          <div class="search-bar">
+            <select style="flex:1"><option>All terminals</option><option>DP World Centerm</option><option>GCT Vanterm</option></select>
+            <select><option>Any window</option><option>Morning</option><option>Afternoon</option></select>
+            <button>Search</button>
+          </div>
+          ${importRows}
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="ch">Option B — Export empty pickup requests</span><span class="badge bp">${openExp.length} open</span></div>
+          <div class="banner purple" style="margin:10px">
+            <div class="bn-icon" style="background:#7C3AED">E</div>
+            <div><div class="bn-title">BCO exporters need empty containers</div><div class="bn-text">Pick up an empty container from the terminal and deliver to the exporter's loading address. Qualifies for a priority gate slot.</div></div>
+          </div>
+          ${exportRows}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="ch">My confirmed double-ended moves</span><span class="badge bg">${confirmedMoves.length}</span></div>
+        ${myMovesHTML}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── PAGE 3: Port Authority ────────────────────────────────────────────────
+function pagePort(){
+  const exportRows=exportRes.map(r=>`<div class="row">
+    <div class="row-time">${r.time}</div>
+    <div class="row-info">
+      <div class="row-id">${r.container} <span style="font-size:13px;color:#64748B;font-weight:400">· ${r.company}</span></div>
+      <div class="row-detail">${TERMS[r.terminal].short} · ${r.line}${r.matched?' → pickup at '+TERMS[r.matched.terminal].short:''}</div>
+    </div>
+    <span class="pill ${r.matched?'pill-double':'pill-normal'}">${r.matched?'Priority · Double-ended':'Standard'}</span>
+    ${termBadge(r.terminal)}
+  </div>`).join('');
+
+  const matchedRows=confirmedMoves.length===0
+    ?'<div class="empty-state">No confirmed moves yet — switch to Trucking dispatcher to trigger matches</div>'
+    :confirmedMoves.map(m=>`<div class="row">
+      <div class="row-info">
+        <div class="row-id">${m.trucker} <span style="font-size:10px;padding:1px 7px;border-radius:6px;font-weight:700;margin-left:4px;background:${m.type==='export'?'#EDE9FE':'#DCFCE7'};color:${m.type==='export'?'#6D28D9':'#15803D'}">${m.type==='export'?'Export pickup':'Import delivery'}${m.cross?' · Cross-terminal':''}</span></div>
+        <div class="row-detail">${m.type==='export'?`Collect ${m.size} empty at ${TERMS[m.terminal]?.short} → Deliver to ${m.loadAddr?.split('–')[0].trim()}`:`Drop ${m.expCtr} at ${TERMS[m.expTerm].short} → Pickup ${m.impCtr} at ${TERMS[m.impTerm].short} → ${m.warehouse?.split('–')[0].trim()}`}</div>
+      </div>
+      <span class="pill-avail">Confirmed</span>
+      <span style="font-size:11px;color:#15803D;font-weight:700;flex-shrink:0">${m.saving}</span>
+    </div>`).join('');
+
+  return `
+  <div style="background:#F0FDF4;border-bottom:1px solid #86EFAC;padding:12px 22px;display:flex;align-items:center;gap:12px">
+    <div style="width:36px;height:36px;background:#4A9B6F;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0">P</div>
+    <div><div style="font-size:16px;font-weight:700;color:#14532D">Port Authority</div><div style="font-size:11px;color:#15803D;margin-top:1px">Management dashboard · DP World Centerm Centerm &amp; GCT Vanterm</div></div>
+  </div>
+  <div class="body">
+    ${statsHTML('port')}
+    <div class="banner green" style="margin:0 0 14px">
+      <div class="bn-icon" style="background:#16A34A">P</div>
+      <div><div class="bn-title">Priority reservation policy — both terminals</div><div class="bn-text">Double-ended moves receive priority gate slots at DP World Centerm Centerm and GCT Vanterm. Trakking reads both reservation systems and coordinates across them — no changes required to either terminal's existing system.</div></div>
+    </div>
+    <div class="cols2">
+      <div>
+        <div class="card">
+          <div class="card-head"><span class="ch">Export reservations — both terminals</span><span class="badge bc">${exportRes.length} today</span></div>
+          ${exportRows}
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="ch">Import containers available</span><span class="badge bc">${importCtrs.filter(c=>c.status==='available').length} available</span></div>
+          ${importCtrs.map(c=>`<div class="row">
+            <div class="row-info">
+              <div class="row-id">${c.container} <span style="font-size:13px;color:#64748B;font-weight:400">· ${c.bco}</span></div>
+              <div class="row-detail">B/L: ${c.bl} · ${c.deliverTo.split('–')[0].trim()} · ${c.window}</div>
+            </div>
+            ${termBadge(c.terminal)}
+            <span class="${c.status==='available'?'pill-avail':'pill-taken'}">${c.status==='available'?'Available':'Claimed'}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-head"><span class="ch">Confirmed double-ended moves</span><span class="badge bg">${confirmedMoves.length}</span></div>
+          ${matchedRows}
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="ch">BCO exporter — empty container requests</span><span class="badge bp">${exportReqs.filter(e=>e.status==='open').length} open</span></div>
+          ${exportReqs.map(e=>`<div class="row">
+            <div class="row-info">
+              <div class="row-id">${e.booking} · ${e.bco}</div>
+              <div class="row-detail">${TERMS[e.terminal].short} · ${e.line} · ${e.size} · ${e.window}</div>
+              <div class="row-detail">Load at: ${e.loadAddr.split('–')[0].trim()}</div>
+            </div>
+            ${termBadge(e.terminal)}
+            <span class="${e.status==='open'?'pill-open':'pill-taken'}">${e.status==='open'?'Open':'Assigned'}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── PAGE 4: BCO Exporter + Terminal operator ──────────────────────────────
+function pageExporter(){
+  return `
+  <div style="background:#F5F3FF;border-bottom:1px solid #C4B5FD;padding:12px 22px;display:flex;align-items:center;gap:12px">
+    <div style="width:36px;height:36px;background:#7C3AED;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0">E</div>
+    <div><div style="font-size:16px;font-weight:700;color:#4C1D95">BCO Exporter</div><div style="font-size:11px;color:#7C3AED;margin-top:1px">Register export bookings · Empty container pickup · Terminal operator view</div></div>
+  </div>
+  <div class="body">
+    ${statsHTML('exporter')}
+    <div class="banner purple" style="margin:0 0 14px">
+      <div class="bn-icon" style="background:#7C3AED">E</div>
+      <div><div class="bn-title">How this works for you as an exporter</div><div class="bn-text">Register your export booking below. Trakking matches a trucker who is already dropping off a loaded container at DP World Centerm or GCT Vanterm — they pick up your empty container on the way out and deliver it to your loading address. No extra trip cost. You get priority delivery.</div></div>
+    </div>
+    <div class="cols2">
+      <div>
+        <div class="card">
+          <div class="card-head"><span class="ch">My export bookings</span><span class="badge bp">${exportReqs.length} registered</span></div>
+          ${exportReqs.map(e=>`<div class="row">
+            <div class="row-info">
+              <div class="row-id">${e.booking} · ${e.bco}</div>
+              <div class="row-detail">${TERMS[e.terminal].short} · ${e.line} · ${e.size} empty needed</div>
+              <div class="row-detail">Load address: ${e.loadAddr.split('–')[0].trim()} · ${e.window}</div>
+            </div>
+            ${termBadge(e.terminal)}
+            <span class="${e.status==='open'?'pill-open':'pill-taken'}">${e.status==='open'?'Awaiting trucker':'Assigned'}</span>
+          </div>`).join('')}
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="ch">Confirmed empty pickups</span></div>
+          ${confirmedMoves.filter(m=>m.type==='export').length===0
+            ?'<div class="empty-state">No confirmed pickups yet</div>'
+            :confirmedMoves.filter(m=>m.type==='export').map(m=>`<div class="row">
+              <div class="row-info">
+                <div class="row-id">${m.bco}</div>
+                <div class="row-detail">Trucker: ${m.trucker} · ${m.size} empty · Delivering to: ${m.loadAddr?.split('–')[0].trim()}</div>
+                <div class="row-detail" style="color:#15803D;font-weight:700;margin-top:2px">En route · Est. arrival: ${m.time}</div>
+              </div>
+              <span class="pill-avail">Confirmed</span>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="ch">Register new export booking</span><span class="badge bp">BCO exporter portal</span></div>
+        <div class="form-pad">
+          <div class="form-grid-2">
+            <div class="fg"><label>Export booking number *</label><input id="exp-bkg" placeholder="BKG-EXP-5500"></div>
+            <div class="fg"><label>Shipping line *</label><select id="exp-line"><option>Yang Ming</option><option>Evergreen</option><option>ZIM</option><option>Maersk</option></select></div>
+          </div>
+          <div class="form-grid-2">
+            <div class="fg"><label>Terminal for empty pickup *</label>
+              <select id="exp-term"><option value="DP">DP World Centerm</option><option value="GCT">GCT Vanterm</option></select>
+              <div class="hint">Which terminal should the trucker collect the empty from?</div>
+            </div>
+            <div class="fg"><label>Container size needed *</label><select id="exp-size"><option>40HC</option><option>40GP</option><option>20GP</option></select></div>
+          </div>
+          <div class="fg" style="margin-bottom:10px">
+            <label>Loading address (your warehouse / facility) *</label>
+            <input id="exp-addr" placeholder="e.g. 1500 Derwent Way, Delta BC">
+            <div class="hint">Trucker will deliver the empty container here for loading</div>
+          </div>
+          <div class="form-grid-2">
+            <div class="fg"><label>Window from *</label><input type="time" id="exp-from" value="09:00"></div>
+            <div class="fg"><label>Window to *</label><input type="time" id="exp-to" value="14:00"></div>
+          </div>
+          <div class="fg" style="margin-bottom:12px">
+            <label>Special instructions (optional)</label>
+            <textarea id="exp-notes" rows="2" placeholder="e.g. Call on arrival, dock door 4, forklift available" style="resize:vertical"></textarea>
+          </div>
+          <div style="background:#F5F3FF;border:1px solid #C4B5FD;border-radius:7px;padding:10px;margin-bottom:12px;font-size:11px;color:#5B21B6;line-height:1.6">
+            <strong>Matching logic:</strong> Trakking finds a trucker already dropping off at your chosen terminal. They collect your empty container on the way out — a double-ended move. You get priority delivery and the trucker gets a priority gate slot.
+          </div>
+          <div id="exp-err" style="margin-bottom:8px"></div>
+          <button class="btn-primary" style="width:100%;background:#7C3AED" onclick="addExportBooking()">Register export booking</button>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:#334155;margin:4px 0 12px">Terminal operator view</div>
+    <div class="cols2">
+      ${termPanel('DP', false, true)}
+      ${termPanel('GCT', false, true)}
+    </div>
+  </div>`;
+}
+
+// ── Form handlers ─────────────────────────────────────────────────────────
+function addSingleContainer(){
+  const ctr=document.getElementById('imp-ctr')?.value.trim();
+  const blNum=document.getElementById('imp-bl')?.value.trim();
+  const term=document.getElementById('imp-term')?.value;
+  const line=document.getElementById('imp-line')?.value;
+  const from=document.getElementById('imp-from')?.value;
+  const to=document.getElementById('imp-to')?.value;
+  const addr=document.getElementById('imp-addr')?.value.trim();
+  const wt=document.getElementById('imp-wt')?.value.trim()||'N/A';
+  const priceMin=parseFloat(document.getElementById('imp-price-min')?.value)||null;
+  const priceSuggested=parseFloat(document.getElementById('imp-price-suggested')?.value)||null;
+  const priceLikely=parseFloat(document.getElementById('imp-price-likely')?.value)||null;
+  const priceMode=document.getElementById('imp-price-mode')?.value||'dynamic';
+  const errEl=document.getElementById('imp-err');
+  if(!ctr||!blNum||!addr){
+    errEl.innerHTML='<div style="font-size:13px;color:#DC2626;padding:6px 10px;background:#FEF2F2;border-radius:5px;border-left:3px solid #DC2626">Container number, B/L number, and delivery address are required.</div>';
+    return;
+  }
+  errEl.innerHTML='';
+  // Calculate current dynamic price
+  const currentPrice = calcDynamicPrice(priceMin, priceSuggested, priceLikely, priceMode);
+  importCtrs.push({id:'IMP-N'+importCtrs.length,container:ctr,bl:blNum,bco:'My Company',terminal:term,line,deliverTo:addr,window:from+'–'+to,weight:wt,status:'available',claimedBy:null,priceMin,priceSuggested,priceLikely,priceMode,currentPrice});
+  showToast(ctr+' registered — delivery fee: $'+(currentPrice||'TBD'));
+  render();
+}
+
+function calcDynamicPrice(min, suggested, likely, mode){
+  if(!suggested && !likely && !min) return null;
+  if(mode==='fixed') return suggested||likely||min;
+  // Dynamic: weight toward likely, nudge based on availability
+  const avail = importCtrs.filter(c=>c.status==='available').length;
+  const urgencyFactor = avail <= 2 ? 1.08 : avail >= 5 ? 0.95 : 1.0;
+  const base = likely || suggested || min;
+  const raw = Math.round(base * urgencyFactor / 5) * 5;
+  if(min && raw < min) return min;
+  if(suggested && raw > suggested * 1.2) return Math.round(suggested * 1.2 / 5) * 5;
+  return raw;
+}
+
+function addExportBooking(){
+  const bkg=document.getElementById('exp-bkg')?.value.trim();
+  const line=document.getElementById('exp-line')?.value;
+  const term=document.getElementById('exp-term')?.value;
+  const size=document.getElementById('exp-size')?.value;
+  const addr=document.getElementById('exp-addr')?.value.trim();
+  const from=document.getElementById('exp-from')?.value;
+  const to=document.getElementById('exp-to')?.value;
+  const errEl=document.getElementById('exp-err');
+  if(!bkg||!addr){errEl.innerHTML='<div style="font-size:11px;color:#DC2626;padding:6px 10px;background:#FEF2F2;border-radius:5px;border-left:3px solid #DC2626">Booking number and loading address are required.</div>';return;}
+  errEl.innerHTML='';
+  exportReqs.push({id:'EXP-N'+exportReqs.length,booking:bkg,bco:'My Export Co.',terminal:term,line,size,window:from+'–'+to,loadAddr:addr,status:'open',trucker:null});
+  showToast('Booking '+bkg+' registered — truckers can now claim this pickup');
+  render();
+}
+
+// ── Upload handlers ───────────────────────────────────────────────────────
+function dragOver(e){e.preventDefault();document.getElementById('upload-zone')?.classList.add('drag')}
+function dragLeave(){document.getElementById('upload-zone')?.classList.remove('drag')}
+function dropFile(e){e.preventDefault();dragLeave();const f=e.dataTransfer.files[0];if(f)processUpload(f)}
+function handleFile(input){if(input.files[0])processUpload(input.files[0])}
+
+function processUpload(file){
+  const zone=document.getElementById('upload-zone');
+  const preview=document.getElementById('upload-preview');
+  if(!zone||!preview) return;
+  zone.innerHTML=`<div class="uz-icon">⏳</div><div class="uz-title">Processing ${file.name}…</div><div class="upload-progress"><div class="upload-progress-fill" id="uprog" style="width:0%"></div></div>`;
+  let w=0;
+  const iv=setInterval(()=>{
+    w+=20;
+    const el=document.getElementById('uprog');
+    if(el) el.style.width=w+'%';
+    if(w>=100){clearInterval(iv);showUploadResult(file,preview,zone);}
+  },120);
+}
+
+function showUploadResult(file,preview,zone){
+  const rows=[
+    {ctr:'YMLU '+rnd(1000000,9999999),bl:'BLYM'+rnd(100000,999999),term:'DP World Centerm',line:'Yang Ming',addr:'Richmond DC',from:'09:00',to:'13:00',wt:'22T',ok:true},
+    {ctr:'EISU '+rnd(1000000,9999999),bl:'BLYM'+rnd(100000,999999),term:'GCT Vanterm',line:'Evergreen',addr:'Delta Warehouse',from:'10:00',to:'14:00',wt:'18T',ok:true},
+    {ctr:'MRKU '+rnd(1000000,9999999),bl:'BLYM'+rnd(100000,999999),term:'DP World Centerm',line:'Maersk',addr:'Surrey Distribution',from:'11:00',to:'15:00',wt:'20T',ok:true},
+    {ctr:'INVALID',bl:'',term:'DP World Centerm',line:'ZIM',addr:'',from:'',to:'',wt:'',ok:false},
+  ];
+  zone.innerHTML=`<div class="uz-icon" style="color:#16A34A">✓</div><div class="uz-title" style="color:#16A34A">${file.name} parsed</div><div class="uz-sub">${rows.filter(r=>r.ok).length} valid · ${rows.filter(r=>!r.ok).length} error</div>`;
+  const valid=rows.filter(r=>r.ok).length;
+  preview.innerHTML=`<table class="preview-table">
+    <thead><tr><th>Container</th><th>B/L</th><th>Terminal</th><th>Deliver to</th><th>Window</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr class="${r.ok?'ok':'err'}"><td>${r.ctr}</td><td>${r.bl||'<span style="color:#DC2626">Missing</span>'}</td><td>${r.term}</td><td>${r.addr||'<span style="color:#DC2626">Missing</span>'}</td><td>${r.from&&r.to?r.from+'–'+r.to:'<span style="color:#DC2626">Missing</span>'}</td></tr>`).join('')}</tbody>
+  </table>
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <button class="btn-primary" onclick="confirmBulk(${valid})">Import ${valid} valid containers</button>
+    <button class="btn-outline" onclick="resetUpload()">Cancel</button>
+  </div>`;
+}
+
+function confirmBulk(n){showToast(n+' containers imported successfully');resetUpload();render();}
+function resetUpload(){
+  const z=document.getElementById('upload-zone');
+  if(z)z.innerHTML=`<div class="uz-icon">📋</div><div class="uz-title">Drag &amp; drop your Excel or CSV file</div><div class="uz-sub">Supported: .xlsx, .xls, .csv · Max 500 rows</div><button class="uz-btn" onclick="document.getElementById('file-input').click()">Browse files</button><input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(this)">`;
+  const p=document.getElementById('upload-preview');
+  if(p)p.innerHTML='';
+}
+function downloadTemplate(){
+  const csv='Container Number,Bill of Lading,Terminal (DP or GCT),Shipping Line,Deliver To Address,Window From,Window To,Weight\nYMLU 1234567,BLYM123456,DP,Yang Ming,11800 Voyageur Way Richmond,09:00,14:00,22T\n';
+  const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);a.download='trakking_import_template.csv';a.click();
+}
+
+// ── Navigation & render ───────────────────────────────────────────────────
+function navTo(page, btn){
+  event.preventDefault();
+  currentPage=page;
+  document.querySelectorAll('.pn-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function render(){
+  const el=document.getElementById('page-content');
+  if(!el) return;
+  if(currentPage==='importer')    el.innerHTML=pageImporter();
+  else if(currentPage==='dispatcher') el.innerHTML=pageDispatcher();
+  else if(currentPage==='port')       el.innerHTML=pagePort();
+  else if(currentPage==='exporter')   el.innerHTML=pageExporter();
+}
+
+render();
+
+
+
+
+
+function toggleSuggestedPrice(mode){
+  const wrap = document.getElementById('suggested-price-wrap');
+  if(!wrap) return;
+  wrap.style.display = mode === 'dynamic' ? 'flex' : 'none';
+  wrap.style.flexDirection = 'column';
+  wrap.style.gap = '4px';
+}
+
+function stepPrice(id, delta){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const current = parseFloat(el.value) || 0;
+  const minVal = parseFloat(el.min) || 0;
+  const next = Math.max(minVal, current + delta);
+  el.value = next;
+}
+
+function togglePricing(idx){
+  const row = document.getElementById('ctr-row-'+idx);
+  if(row) row.classList.toggle('open');
+}
+
+function pricingMiniCard(c){
+  if(!c.currentPrice && !c.priceSuggested) return '';
+  const min = c.priceMin || 0;
+  const sug = c.priceSuggested || c.currentPrice;
+  const likely = c.priceLikely || c.currentPrice;
+  const cur = c.currentPrice || likely;
+  const range = (sug - min) || 1;
+  const pct = Math.min(96, Math.max(4, Math.round(((cur - min) / range) * 100)));
+  const modeLabel = c.priceMode==='fixed'?'Fixed price':c.priceMode==='open'?'Open bid':'Dynamic';
+  const modeClr   = c.priceMode==='fixed'?'#1D4ED8':c.priceMode==='open'?'#6D28D9':'#92400E';
+  const modeBg    = c.priceMode==='fixed'?'#DBEAFE':c.priceMode==='open'?'#EDE9FE':'#FEF9C3';
+  if(c && c.status === 'confirmed') {
+    return `<div class="price-expand" style="background:#F0FDF4;border-top:2px solid #86EFAC">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="width:40px;height:40px;border-radius:50%;background:#16A34A;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#fff;font-weight:700">&#10003;</div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#14532D">Price Accepted</div>
+          <div style="font-size:12px;color:#15803D;margin-top:1px">Trucker confirmed at ${cur} &#183; Agreement locked</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-size:32px;font-weight:700;color:#15803D;line-height:1">${cur}</div>
+          <div style="font-size:11px;color:#64748B">per container</div>
+        </div>
+      </div>
+      <div style="background:#DCFCE7;border:1.5px solid #86EFAC;border-radius:8px;padding:11px 14px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;color:#15803D;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Agreed rate</div>
+            <div style="font-size:22px;font-weight:700;color:#14532D">${cur} <span style="font-size:13px;font-weight:400;color:#15803D">/ container</span></div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:#64748B;margin-bottom:3px">Original range</div>
+            <div style="font-size:13px;color:#475569">${min} &#8211; ${sug}</div>
+            <div style="font-size:11px;color:#15803D;font-weight:700;margin-top:2px">${cur <= likely ? 'Below market estimate &#10003;' : 'Within agreed range &#10003;'}</div>
+          </div>
+        </div>
+        <div style="position:relative;height:8px;background:#BBF7D0;border-radius:4px;margin-bottom:5px">
+          <div style="position:absolute;left:0;top:0;height:8px;border-radius:4px;background:#16A34A;width:${pct}%"></div>
+          <div style="position:absolute;top:-5px;width:18px;height:18px;border-radius:50%;background:#15803D;border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.2);left:calc(${pct}% - 9px)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#15803D;font-weight:600">
+          <span>Floor ${min}</span><span>&#9679; Accepted ${cur}</span><span>Ceiling ${sug}</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#15803D;background:#F0FDF4;border-radius:6px;padding:8px 10px;line-height:1.5">Price accepted and locked. This container is scheduled for delivery. No further price adjustment will occur.</div>
+    </div>`;
+  }
+
+    return `<div class="price-expand">
+    <div class="price-ticker">
+      <span class="price-currency" style="font-size:18px;color:#64748B">$</span>
+      <span class="price-current-big">${cur}</span>
+      <span style="font-size:13px;color:#64748B">current offer to trucker ($)</span>
+      <span class="price-mode-tag" style="background:${modeBg};color:${modeClr}">${modeLabel}</span>
+    </div>
+    <div class="price-three">
+      <div class="price-box" style="background:#FEF2F2;border:1px solid #FCA5A5">
+        <div class="price-box-lbl" style="color:#DC2626">Minimum</div>
+        <div class="price-box-val" style="color:#DC2626">${min}</div>
+        <div style="font-size:10px;color:#94A3B8;margin-top:3px">Floor — never below</div>
+      </div>
+      ${c.priceMode!=='fixed'?`<div class="price-box" style="background:#F0FDF4;border:1px solid #86EFAC"><div class="price-box-lbl" style="color:#15803D">Suggested</div><div class="price-box-val" style="color:#15803D">${sug}</div><div style="font-size:10px;color:#94A3B8;margin-top:3px">Your preferred rate</div></div>`:''}
+      <div class="price-box" style="background:#FFFBEB;border:1px solid #FDE68A">
+        <div class="price-box-lbl" style="color:#D97706">Maximum</div>
+        <div class="price-box-val" style="color:#D97706">${likely}</div>
+        <div style="font-size:10px;color:#94A3B8;margin-top:3px">Market estimate</div>
+      </div>
+    </div>
+    <div class="price-track-wrap">
+      <div class="price-track"></div>
+      <div class="price-dot" style="left:calc(${pct}% - 9px)"></div>
+    </div>
+    <div class="price-track-labels">
+      <span>Min ${min}</span>
+      <span style="color:#0369A1;font-weight:600">● Current ${cur}</span>
+      <span>Suggested ${sug}</span>
+    </div>
+    <div class="price-note">Trakking adjusts the current price within your range based on terminal availability, time of day, and number of active matches. You are always in control of the floor.</div>
+  </div>`;
+}
+
+// Render this page
+
+(function(){
+  const el = document.getElementById('page-content');
+  // BCO Importer section
+  el.innerHTML = pageImporter();
+  // Append terminal section heading + both terminal panels
+
+})();
+
+</script>
+</body>
+</html>
